@@ -4,50 +4,47 @@ import bcrypt from "bcryptjs";
 
 import { sendVerificationEmail } from "@/helpers/sendMail";
 import { ApiResponse } from "@/types/ApiResponse";
+import { NextResponse } from "next/server";
 
-export async function POST(request: Request): Promise<ApiResponse> {
-
-    //connect with database
-    await dbConnect()
+export async function POST(request: Request): Promise<NextResponse> {
+    // Connect to the database
+    await dbConnect();
 
     try {
-        //extract all data from request objects
+        // Extract data from the request object
         const { username, email, password } = await request.json();
 
-        //check, email is already exist or not
+        // Check if the email already exists
         const existingUser = await UserModel.findOne({ email });
 
-        //generate varification code
-        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
+        // Generate a verification code
+        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        //set expiraty date
-        const expiryDate = new Date()
+        // Set expiry date for the verification code (1 hour from now)
+        const expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 1);
 
-        //set only one hours expiry time
-        expiryDate.setHours(expiryDate.getHours() + 1)
+        let response: ApiResponse;
 
         if (existingUser) {
-            //if user is already registered and verified
             if (existingUser.isVerified) {
-                return {
+                response = {
                     success: false,
                     message: "Email already registered and verified",
-                    statusCode: 409
-                }
-            }
-             //if user is already registered but not verified
-            else {
+                    statusCode: 409,
+                };
+                return NextResponse.json(response);
+            } else {
+                // Update the user's password and verification details
                 const hashedPassword = await bcrypt.hash(password, 10);
                 existingUser.password = hashedPassword;
                 existingUser.verifyCode = verifyCode;
                 existingUser.verifyCodeExp = expiryDate;
-                await existingUser.save()
+                await existingUser.save();
             }
-        }
-        else {
+        } else {
+            // Create a new user
             const hashedPassword = await bcrypt.hash(password, 10);
-
-            //create a new user 
             const user = await UserModel.create({
                 username,
                 email,
@@ -56,33 +53,52 @@ export async function POST(request: Request): Promise<ApiResponse> {
                 verifyCodeExp: expiryDate,
                 isVerified: false,
                 isAccept: true,
-                messages: []
+                messages: [],
+            });
 
-            })
-            
-            console.log("Newly Registered user :", user)
+            console.log("Newly Registered user:", user);
 
-            //check user creation 
+            // Check if user creation failed
             if (!user) {
-                return { success: false, message: "Failed to create user", statusCode: 500 }
+                response = {
+                    success: false,
+                    message: "Failed to create user",
+                    statusCode: 500,
+                };
+                return NextResponse.json(response);
             }
         }
 
-        //send verification email to user
-        const emailResponse = await sendVerificationEmail(email, username, verifyCode)
+        // Send verification email
+        const emailResponse = await sendVerificationEmail(email, username, verifyCode);
 
-        console.log(emailResponse)
+        console.log(emailResponse);
 
-        //if failed to send email, return an error message
+        // If failed to send the email, return an error message
         if (!emailResponse.success) {
-            return { success: false, message: "Failed to send varification email", statusCode: emailResponse.statusCode }
+            response = {
+                success: false,
+                message: "Failed to send verification email",
+                statusCode: emailResponse.statusCode,
+            };
+            return NextResponse.json(response);
         }
 
-        //if email sent successfully, return a success message
-        return { success: true, message: "User Regiter successfully. Please verify your email.", statusCode: 201 }
+        // If email sent successfully, return a success message
+        response = {
+            success: true,
+            message: "User registered successfully. Please verify your email.",
+            statusCode: 201,
+        };
+        return NextResponse.json(response);
 
     } catch (signinError) {
         console.error("User registering error", signinError);
-        return { success: false, message: "Sign in error", statusCode: 401 }
+        const response: ApiResponse = {
+            success: false,
+            message: "Sign in error",
+            statusCode: 401,
+        };
+        return NextResponse.json(response);
     }
 }
