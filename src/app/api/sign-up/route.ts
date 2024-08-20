@@ -20,7 +20,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Generate a verification code
         const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Set expiry date for the verification code (1 hour from now)
+        // Set expiry date for the verification code 
         const expiryDate = new Date();
         expiryDate.setHours(expiryDate.getHours() + 1);
 
@@ -56,8 +56,6 @@ export async function POST(request: Request): Promise<NextResponse> {
                 messages: [],
             });
 
-            console.log("Newly Registered user:", user);
-
             // Check if user creation failed
             if (!user) {
                 response = {
@@ -71,8 +69,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         // Send verification email
         const emailResponse = await sendVerificationEmail(email, username, verifyCode);
-
-        console.log(emailResponse);
 
         // If failed to send the email, return an error message
         if (!emailResponse.success) {
@@ -93,7 +89,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json(response);
 
     } catch (signinError) {
-        console.error("User registering error", signinError);
+      
         const response: ApiResponse = {
             success: false,
             message: "Sign in error",
