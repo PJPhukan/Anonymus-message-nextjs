@@ -1,12 +1,12 @@
 "use client";
-/*
+
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import axios, { AxiosError } from "axios";
-import { useDebounceValue } from "usehooks-ts";
+import { useDebounceValue, useDebounceCallback } from "usehooks-ts";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { signUpSchema } from "@/Schemas/SignupSchema";
@@ -29,7 +29,8 @@ const page = () => {
   const [usernameMessage, setusernameMessage] = useState("");
   const [isCheckingMessage, setisCheckingMessage] = useState(false);
   const [isSubmittingForm, setisSubmittingForm] = useState(false);
-  const debounceUsername = useDebounceValue(username, 200); //if you not understand then go to usehook.ts website
+  // const debounceUsername = useDebounceValue(username, 200); //if you not understand then go to usehook.ts website
+  const debounced = useDebounceCallback(setusername, 300); //if you not understand then go to usehook.ts website
   const { toast } = useToast();
   const router = useRouter();
 
@@ -46,12 +47,12 @@ const page = () => {
   //api call when change the value of debounceUsername
   useEffect(() => {
     const CheckUsernameUnique = async () => {
-      if (debounceUsername) {
+      if (username) {
         setisCheckingMessage(true);
         setusernameMessage("");
         try {
           const response = await axios.get(
-            `/api/check-username-unique?username=${debounceUsername}`
+            `/api/check-username-unique?username=${username}`
           );
           setusernameMessage(response.data.message);
         } catch (error) {
@@ -66,13 +67,13 @@ const page = () => {
       }
     };
     CheckUsernameUnique();
-  }, [debounceUsername]);
+  }, [username]);
 
   const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
     setisSubmittingForm(true);
     try {
       const response = await axios.post<ApiResponse>("/api/sign-up", data);
-
+      console.log("This is from sign up page ");
       toast({
         title: "Success",
         description: response.data.message,
@@ -116,10 +117,22 @@ const page = () => {
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
-                        setusername(e.target.value);
+                        debounced(e.target.value);
                       }}
                     />
                   </FormControl>
+                  {isCheckingMessage && <Loader2 className="animate-spin" />}
+                  {usernameMessage && (
+                    <p
+                      className={`text-sm ${
+                        usernameMessage === "Username is unique"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {usernameMessage}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -131,7 +144,7 @@ const page = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="email" {...field} />
+                    <Input  placeholder="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,7 +157,7 @@ const page = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="password" {...field} />
+                    <Input type="password" placeholder="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,9 +187,9 @@ const page = () => {
 };
 
 export default page;
-*/
 
-//use of next auth
+/*
+ //use of next auth
 import { useSession, signIn, signOut } from "next-auth/react";
 export default function Component() {
   const { data: session } = useSession();
@@ -185,12 +198,12 @@ export default function Component() {
       <>
         Signed in as {session.user.email} <br />
         <button onClick={() => signOut()}>Sign out</button>
-      </>
+        </>
     );
   }
   return (
     <>
-      <div className="container  m-auto flex justify-items-center items-center flex-col gap-5 p-5">
+    <div className="container  m-auto flex justify-items-center items-center flex-col gap-5 p-5">
         <h1 className=" text-2xl ">This is Sign in page</h1>
         <button
           onClick={() => signIn()}
@@ -199,6 +212,7 @@ export default function Component() {
           Sign in
         </button>
       </div>
-    </>
-  );
-}
+      </>
+    );
+  }
+  */
