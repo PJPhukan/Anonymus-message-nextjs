@@ -90,7 +90,7 @@ export async function GET(request: Request) {
         return Response.json({
             success: true,
             message: "Successfully get user status",
-            isAccept: foundUser.isAccept,
+            isAcceptingMessage: foundUser.isAccept,
             statusCode: 200
         }, {
             status: 200

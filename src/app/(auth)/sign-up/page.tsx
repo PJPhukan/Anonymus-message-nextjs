@@ -73,7 +73,7 @@ const page = () => {
     setisSubmittingForm(true);
     try {
       const response = await axios.post<ApiResponse>("/api/sign-up", data);
-      console.log("This is from sign up page ");
+      console.log("This is from sign up page ");//TODO:remove
       toast({
         title: "Success",
         description: response.data.message,
@@ -170,7 +170,7 @@ const page = () => {
                   Please wait...
                 </>
               ) : (
-                " Sign in"
+                " Sign up"
               )}
             </Button>
           </form>

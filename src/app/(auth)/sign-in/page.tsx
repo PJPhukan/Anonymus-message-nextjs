@@ -1,20 +1,15 @@
 "use client";
-/*
-import React, { useEffect, useState } from "react";
+
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
-import axios, { AxiosError } from "axios";
-import { useDebounceValue } from "usehooks-ts";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { signUpSchema } from "@/Schemas/SignupSchema";
-import { ApiResponse } from "@/types/ApiResponse";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,74 +17,37 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { loginSchema } from "@/Schemas/LoginSchema";
+import { signIn } from "next-auth/react";
 
 const page = () => {
-  const [username, setusername] = useState("");
-  const [usernameMessage, setusernameMessage] = useState("");
-  const [isCheckingMessage, setisCheckingMessage] = useState(false);
-  const [isSubmittingForm, setisSubmittingForm] = useState(false);
-  const debounceUsername = useDebounceValue(username, 200); //if you not understand then go to usehook.ts website
   const { toast } = useToast();
   const router = useRouter();
 
   //zod implementation
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
-      email: "",
+      identifier: "",
       password: "",
     },
   });
 
-  //api call when change the value of debounceUsername
-  useEffect(() => {
-    const CheckUsernameUnique = async () => {
-      if (debounceUsername) {
-        setisCheckingMessage(true);
-        setusernameMessage("");
-        try {
-          const response = await axios.get(
-            `/api/check-username-unique?username=${debounceUsername}`
-          );
-          setusernameMessage(response.data.message);
-        } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          setusernameMessage(
-            axiosError.response?.data.message || " Error checking username"
-          );
-          // console.log("Error : ", axiosError);
-        } finally {
-          setisCheckingMessage(false);
-        }
-      }
-    };
-    CheckUsernameUnique();
-  }, [debounceUsername]);
-
-  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
-    setisSubmittingForm(true);
-    try {
-      const response = await axios.post<ApiResponse>("/api/sign-up", data);
-
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    const response = await signIn("credentials", {
+      redirect: false,
+      identifier: data.identifier,
+      password: data.password,
+    });
+    if (response?.error) {
       toast({
-        title: "Success",
-        description: response.data.message,
-      });
-
-      router.replace(`/verify/${username}`);
-      setisSubmittingForm(false);
-    } catch (error) {
-      console.error("Error in signup of user :", error);
-      const axiosError = error as AxiosError<ApiResponse>;
-      let axiosMessage = axiosError.response?.data.message;
-      toast({
-        title: "Error",
-        description: axiosMessage || "Error in signup",
+        title: "Login failed",
+        description: "Incorrect username or password",
         variant: "destructive",
       });
-      setisSubmittingForm(false);
+    }
+    if (response?.url) {
+      router.replace("/dashboard");
     }
   };
   return (
@@ -100,38 +58,18 @@ const page = () => {
             {" "}
             Join Annonymus Message
           </h1>
-          <p className="mb-4"> Sign up to start yout annonymus adventure</p>
+          <p className="mb-4"> Sign in to start yout annonymus adventure</p>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="username"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        setusername(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
+              name="identifier"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="email" {...field} />
+                    <Input placeholder="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,28 +82,19 @@ const page = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="password" {...field} />
+                    <Input type="password" placeholder="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isSubmittingForm}>
-              {isSubmittingForm ? (
-                <>
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                  Please wait...
-                </>
-              ) : (
-                " Sign in"
-              )}
-            </Button>
+            <Button type="submit">Sign in</Button>
           </form>
         </Form>
         <div className="text-center mt-4">
-          Already a member?
-          <Link href="/sign-in" className="text-blue-500 hover:text-blue-600">
-            Sign in
+          Don't have any account?
+          <Link href="/sign-up" className="text-blue-500 hover:text-blue-600">
+            Sign Up
           </Link>
         </div>
       </div>
@@ -174,31 +103,3 @@ const page = () => {
 };
 
 export default page;
-*/
-
-//use of next auth
-import { useSession, signIn, signOut } from "next-auth/react";
-export default function Component() {
-  const { data: session } = useSession();
-  if (session) {
-    return (
-      <>
-        Signed in as {session.user.email} <br />
-        <button onClick={() => signOut()}>Sign out</button>
-      </>
-    );
-  }
-  return (
-    <>
-      <div className="container  m-auto flex justify-items-center items-center flex-col gap-5 p-5">
-        <h1 className=" text-2xl ">This is Sign in page</h1>
-        <button
-          onClick={() => signIn()}
-          className="border-solid border-2 border-sky-500  m-auto rounded-full py-3 px-12 text-xl"
-        >
-          Sign in
-        </button>
-      </div>
-    </>
-  );
-}
