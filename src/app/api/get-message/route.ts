@@ -38,8 +38,8 @@ export async function GET(request: Request) {
                 }
             },
             {
-                $group:{
-                    _id:'$_id',
+                $group: {
+                    _id: '$_id',
                     messages: {
                         $push: "$messages"
                     }
@@ -47,13 +47,22 @@ export async function GET(request: Request) {
             }
         ])
 
-        if(!user || user.length === 0){
+        if (user.length === 0) {
+            return Response.json({
+                success: true,
+                message: "No messages found",
+                statusCode: 200
+            }, {
+                status: 200
+            })
+        }
+        if (!user) {
             return Response.json({
                 success: false,
-                message: "No messages found",
-                statusCode: 404
+                message: "Internal server error",
+                statusCode: 500
             }, {
-                status: 404
+                status: 500
             })
         }
         return Response.json({
@@ -66,7 +75,6 @@ export async function GET(request: Request) {
         })
 
     } catch (error) {
-        console.error("Failed to get message", error)
         return Response.json({
             success: false,
             message: "Failed to get message ",

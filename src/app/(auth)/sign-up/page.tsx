@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import axios, { AxiosError } from "axios";
-import { useDebounceValue, useDebounceCallback } from "usehooks-ts";
+import { useDebounceCallback } from "usehooks-ts";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { signUpSchema } from "@/Schemas/SignupSchema";
@@ -14,7 +14,6 @@ import { ApiResponse } from "@/types/ApiResponse";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -60,7 +59,6 @@ const page = () => {
           setusernameMessage(
             axiosError.response?.data.message || " Error checking username"
           );
-          // console.log("Error : ", axiosError);
         } finally {
           setisCheckingMessage(false);
         }
@@ -73,7 +71,6 @@ const page = () => {
     setisSubmittingForm(true);
     try {
       const response = await axios.post<ApiResponse>("/api/sign-up", data);
-      console.log("This is from sign up page ");//TODO:remove
       toast({
         title: "Success",
         description: response.data.message,
@@ -81,10 +78,12 @@ const page = () => {
 
       router.replace(`/verify/${username}`);
       setisSubmittingForm(false);
+
+
     } catch (error) {
-      console.error("Error in signup of user :", error);
       const axiosError = error as AxiosError<ApiResponse>;
       let axiosMessage = axiosError.response?.data.message;
+      
       toast({
         title: "Error",
         description: axiosMessage || "Error in signup",

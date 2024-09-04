@@ -21,7 +21,6 @@ export async function POST(req: Request) {
         });
 
     } catch (error) {
-        // console.log("Error occurred: ", error);
         return Response.json({
             success: false,
             message: "Error occured while generating suggest message",

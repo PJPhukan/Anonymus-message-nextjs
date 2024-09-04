@@ -68,7 +68,6 @@ export async function POST(request: Request) {
         }
 
     } catch (error) {
-        console.error("Verify code error", error);
         return Response.json({
             success: false,
             message: "Failed to verify code",

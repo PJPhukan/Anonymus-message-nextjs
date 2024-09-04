@@ -14,10 +14,8 @@ export async function GET(request: Request) {
         const queryParams = {
             username: searchParams.get("username") //how to extract query perameter from url
         }
-        // console.log(queryParams.username)
-        //validate username with zod
         const validationResult = usernameValidationSchema.safeParse(queryParams)
-        console.log("Print validateResult", validationResult) //TODO: Remove
+       
 
         if (!validationResult.success) {
             const usernameError = validationResult.error.format().username?._errors || []
