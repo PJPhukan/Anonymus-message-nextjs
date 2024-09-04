@@ -1,16 +1,11 @@
 import { UserModel } from "@/model/User.model";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/options";
-import { User } from "next-auth";
 import dbConnect from "@/lib/dbConnection";
-import mongoose from "mongoose";
 import { Message } from "@/model/User.model";
 
 
 export async function POST(request: Request) {
     await dbConnect()
     const { username, content } = await request.json();
-
     try {
         const user = await UserModel.findOne({ username })
         if (!user) {

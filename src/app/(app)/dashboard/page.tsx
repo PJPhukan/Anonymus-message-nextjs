@@ -138,8 +138,27 @@ const Dashboard = () => {
     });
   };
 
-  const handleDeleteMessage = () => {
-    console.log("Delete message"); //TODO: complete the delete message fuction
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      await axios.delete<ApiResponse>("/api/delete-message", {
+        data: {
+          messageId,
+        },
+      });
+      toast({
+        title: "Message deleted successfully",
+        description: "This message has been permanently deleted",
+      });
+      HandleDeleteMessages(messageId);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiResponse>;
+      let errorMessage = axiosError.response?.data.message;
+      toast({
+        title: "Error",
+        description: errorMessage || "Error deleting message",
+        variant: "destructive",
+      });
+    }
   };
   if (!session || !session.user) {
     return (
